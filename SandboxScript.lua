@@ -241,7 +241,7 @@ const function CustomRequire(module: ScriptInstance): any
  return finalResult
 end
 
-export function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
+const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
  const targetType: string = typeof(targetScript)
  assert(
   targetType == "Instance" or targetType == "table" or targetType == "userdata",
@@ -298,3 +298,5 @@ export function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): (
   error(string.format("SandboxScript: unsupported ClassName '%s'", to_string(className)), 2)
  end
 end
+
+return SandboxScript
