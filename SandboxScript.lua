@@ -192,11 +192,11 @@ const function CustomRequire(module: ScriptInstance): any
  local rawResult: any = nil
 
  const success: boolean = xpcall(function()
-  local function captureReturns(...: any)
+  const function capture_returns(...: any)
    returnCount = select("#", ...)
    rawResult = ...
   end
-  captureReturns(moduleFunc())
+  capture_returns(moduleFunc())
  end, ErrorHandler)
 
  local finalSuccess: boolean = success
@@ -216,12 +216,10 @@ const function CustomRequire(module: ScriptInstance): any
  else
   newState.status = "Error"
   const errString: string = to_string(finalResult)
-  
-  const formattedErr: string = if string.find(errString, "did not return exactly one value")
-   or string.find(errString, "Error while requiring ModuleScript")
-   then errString
-   else string.format("Error while requiring ModuleScript '%s':\n%s", getscriptname(module), errString)
 
+  const formattedErr: string = if string.find(errString, "did not return exactly one value") or string.find(errString, "Error while requiring ModuleScript") then
+   errString
+  else string.format("Error while requiring ModuleScript '%s':\n%s", getscriptname(module), errString)
   newState.result = formattedErr
   ModuleCache[module] = { success = false, result = formattedErr }
  end
@@ -249,13 +247,18 @@ const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
  )
  assert(typeof(func) == "function", "SandboxScript: func must be a function")
 
- const successClassName, className = getproperty(targetScript, "ClassName")
+ const successClassName: boolean, className: any = getproperty(targetScript, "ClassName")
  assert(
   successClassName and typeof(className) == "string",
   "SandboxScript: targetScript missing valid ClassName string"
  )
 
- const activeState = LoadingStates[targetScript]
+ const activeState: {
+  result: any,
+  status: "Error" | "Loaded" | "Loading",
+  thread: thread,
+  waiting: {thread}
+ } = LoadingStates[targetScript]
  assert(
   activeState == nil or activeState.status ~= "Loading",
   string.format("SandboxScript: cannot re-sandbox '%s' while it is loading", getscriptname(targetScript))
@@ -265,12 +268,12 @@ const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
  LoadingStates[targetScript] = nil
 
  local parentEnv: { [string]: any }
- const successEnv, funcEnv = pcall(getfenv, func)
+ const successEnv: boolean, funcEnv: any = pcall(getfenv, func)
  if successEnv and typeof(funcEnv) == "table" then
   parentEnv = funcEnv
  else
-  const successCallerEnv, callerEnv = pcall(getfenv, 2)
-  if successCallerEnv and typeof(callerEnv) == "table" then
+  const scCallerEnv: boolean, callerEnv: any = pcall(getfenv, 2)
+  if scCallerEnv and typeof(callerEnv) == "table" then
    parentEnv = callerEnv
   else
    parentEnv = getfenv()
@@ -284,9 +287,9 @@ const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
   __index = parentEnv,
  })
 
- const setEnvSuccess, setEnvErr = pcall(setfenv, func, newEnv)
+ const setEnvSc, setEnvErr = pcall(setfenv, func, newEnv)
  assert(
-  setEnvSuccess,
+  setEnvSc,
   string.format("SandboxScript: failed to set environment for '%s': %s", getscriptname(targetScript), to_string(setEnvErr))
  )
 
