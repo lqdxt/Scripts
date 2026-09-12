@@ -1,6 +1,4 @@
 --!strict
---!native
---!optimize 2
 
 export type ScriptInstance = Instance | {
  ClassName: string,
@@ -28,7 +26,7 @@ const ThreadWaitingOnModule: { [thread]: ScriptInstance } = setmetatable({} :: a
 
 const LoadingStates: { [ScriptInstance]: LoadingState } = {}
 
-const function getproperty(target: unknown, property: string): (boolean, any)
+local function getproperty(target: unknown, property: string): (boolean, any)
  if typeof(target) == "Instance" or typeof(target) == "table" or typeof(target) == "userdata" then
   return pcall(function()
    return (target :: any)[property]
@@ -37,14 +35,14 @@ const function getproperty(target: unknown, property: string): (boolean, any)
  return false, nil
 end
 
-const function to_string(value: unknown): string
+local function to_string(value: unknown): string
  const success, result = pcall(function()
   return tostring(value)
  end)
  return if success then result else "<unstringable object>"
 end
 
-const function ErrorHandler(err: unknown): string
+local function ErrorHandler(err: unknown): string
  const errString = to_string(err)
  if string.find(errString, "Stack Begin") or string.find(errString, "stack traceback:") then
   return errString
@@ -56,7 +54,7 @@ const function ErrorHandler(err: unknown): string
  return errString
 end
 
-const function getscriptname(module: unknown): string
+local function getscriptname(module: unknown): string
  const success, name = getproperty(module, "Name")
  if success and typeof(name) == "string" and name ~= "" then
   return name
@@ -64,7 +62,7 @@ const function getscriptname(module: unknown): string
  return "UnnamedModule"
 end
 
-const function WaitingOn(targetThread: thread, sourceThread: thread): boolean
+local function WaitingOn(targetThread: thread, sourceThread: thread): boolean
  local visitedThreads: { [thread]: boolean } = {}
  local checkThread: thread? = targetThread
 
@@ -93,17 +91,17 @@ const function WaitingOn(targetThread: thread, sourceThread: thread): boolean
  return false
 end
 
-const function CustomRequire(module: ScriptInstance): any
+local function CustomRequire(module: ScriptInstance): any
  const moduleType: string = typeof(module)
  assert(
   moduleType == "Instance" or moduleType == "table" or moduleType == "userdata",
   string.format("bad argument #1 to 'require' (Instance or table expected, got %s)", moduleType)
  )
 
- const successClassName, className = getproperty(module, "ClassName")
+ const scClassName, className = getproperty(module, "ClassName")
  assert(
-  successClassName and className == "ModuleScript",
-  string.format("cannot require a %s, only ModuleScripts", if successClassName then to_string(className) else "invalid object")
+  scClassName and className == "ModuleScript",
+  string.format("cannot require a %s, only ModuleScripts", if scClassName then to_string(className) else "invalid object")
  )
 
  const cachedEntry: CacheEntry? = ModuleCache[module]
@@ -175,24 +173,11 @@ const function CustomRequire(module: ScriptInstance): any
  }
  LoadingStates[module] = newState
 
- task.defer(function()
-  if LoadingStates[module] == newState and coroutine.status(currentThread) == "dead" then
-   newState.status = "Error"
-   newState.result = string.format("Thread loading ModuleScript '%s' was cancelled or terminated", getscriptname(module))
-   LoadingStates[module] = nil
-   for _, waitingThread in newState.waiting do
-    if coroutine.status(waitingThread) == "suspended" then
-     task.spawn(waitingThread)
-    end
-   end
-  end
- end)
-
  local returnCount: number = 0
  local rawResult: any = nil
 
- const success: boolean = xpcall(function()
-  const function capture_returns(...: any)
+ local success: boolean, xpcallErr: any = xpcall(function()
+  local function capture_returns(...: any)
    returnCount = select("#", ...)
    rawResult = ...
   end
@@ -200,7 +185,7 @@ const function CustomRequire(module: ScriptInstance): any
  end, ErrorHandler)
 
  local finalSuccess: boolean = success
- local finalResult: any = rawResult
+ local finalResult: any = if success then rawResult else xpcallErr
 
  if finalSuccess then
   if returnCount ~= 1 or finalResult == nil then
@@ -239,40 +224,44 @@ const function CustomRequire(module: ScriptInstance): any
  return finalResult
 end
 
-const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
- const targetType: string = typeof(targetScript)
+export type SandboxOptions = {
+ AutoRun: boolean?,
+}
+
+export type ScriptHandle = {
+ run: (...any) -> thread,
+ script: ScriptInstance,
+}
+
+local function SandboxScript(TargetScript: ScriptInstance, func: ScriptFunc, options: SandboxOptions?): ScriptHandle
+ const targetType: string = typeof(TargetScript)
  assert(
   targetType == "Instance" or targetType == "table" or targetType == "userdata",
-  "SandboxScript: targetScript must be an Instance, table, or userdata"
+  "SandboxScript: TargetScript must be an Instance, table, or userdata"
  )
  assert(typeof(func) == "function", "SandboxScript: func must be a function")
 
- const successClassName: boolean, className: any = getproperty(targetScript, "ClassName")
+ const scClassName, className = getproperty(TargetScript, "ClassName")
  assert(
-  successClassName and typeof(className) == "string",
-  "SandboxScript: targetScript missing valid ClassName string"
+  scClassName and typeof(className) == "string",
+  "SandboxScript: TargetScript missing valid ClassName string"
  )
 
- const activeState: {
-  result: any,
-  status: "Error" | "Loaded" | "Loading",
-  thread: thread,
-  waiting: {thread}
- } = LoadingStates[targetScript]
+ const activeState = LoadingStates[TargetScript]
  assert(
   activeState == nil or activeState.status ~= "Loading",
-  string.format("SandboxScript: cannot re-sandbox '%s' while it is loading", getscriptname(targetScript))
+  string.format("SandboxScript: cannot re-sandbox '%s' while it is loading", getscriptname(TargetScript))
  )
 
- ModuleCache[targetScript] = nil
- LoadingStates[targetScript] = nil
+ ModuleCache[TargetScript] = nil
+ LoadingStates[TargetScript] = nil
 
  local parentEnv: { [string]: any }
- const successEnv: boolean, funcEnv: any = pcall(getfenv, func)
+ const successEnv, funcEnv = pcall(getfenv, func)
  if successEnv and typeof(funcEnv) == "table" then
   parentEnv = funcEnv
  else
-  const scCallerEnv: boolean, callerEnv: any = pcall(getfenv, 2)
+  const scCallerEnv, callerEnv = pcall(getfenv, 2)
   if scCallerEnv and typeof(callerEnv) == "table" then
    parentEnv = callerEnv
   else
@@ -281,7 +270,7 @@ const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
  end
 
  const newEnv = setmetatable({
-  script = targetScript,
+  script = TargetScript,
   require = CustomRequire,
  }, {
   __index = parentEnv,
@@ -290,16 +279,27 @@ const function SandboxScript(targetScript: ScriptInstance, func: ScriptFunc): ()
  const setEnvSc, setEnvErr = pcall(setfenv, func, newEnv)
  assert(
   setEnvSc,
-  string.format("SandboxScript: failed to set environment for '%s': %s", getscriptname(targetScript), to_string(setEnvErr))
+  string.format("SandboxScript: failed to set environment for '%s': %s", getscriptname(TargetScript), to_string(setEnvErr))
  )
 
- if className == "ModuleScript" then
-  ScriptRegistry[targetScript] = func
- elseif className == "LocalScript" or className == "Script" then
-  task.spawn(func)
- else
-  error(string.format("SandboxScript: unsupported ClassName '%s'", to_string(className)), 2)
+ ScriptRegistry[TargetScript] = func
+
+ local runner = function(...: any): thread
+  return task.spawn(func, ...)
  end
+
+ const shouldAutoRun = if options and options.AutoRun ~= nil
+  then options.AutoRun
+  else (className == "LocalScript" or className == "Script")
+
+ if shouldAutoRun then
+  runner()
+ end
+
+ return {
+  run = runner,
+  script = TargetScript,
+ }
 end
 
 return SandboxScript
