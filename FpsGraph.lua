@@ -1,5 +1,4 @@
 const RunService: RunService = game:GetService("RunService")
-game:GetService("UserInputService")
 const SETTINGS: {
  GRAPH: {
   WIDTH: number,
@@ -25,7 +24,7 @@ const floor: any = math.floor
 const Draw: any = function(...): any
  return Drawing.new(...)
 end
-if not Draw then
+if not Drawing then
  error("this environment does not support drawing api")
 end
 
