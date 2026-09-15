@@ -1,5 +1,5 @@
-const RunService = game:GetService("RunService")
-const env: any = type(getgenv) == "function" and getgenv() or type(getfenv) == "function" and getfenv() or _G
+const RunService: RunService = game:GetService("RunService")
+game:GetService("UserInputService")
 const SETTINGS: {
  GRAPH: {
   WIDTH: number,
@@ -17,25 +17,29 @@ const SETTINGS: {
  },
  MAX_FPS_SCALE = 144
 }
+
 const sample: number = SETTINGS.GRAPH.WIDTH
 const clamp: any = math.clamp
 const floor: any = math.floor
 
-const Draw: any = Drawing.new
+const Draw: any = function(...): any
+ return Drawing.new(...)
+end
 if not Draw then
- local exc: string, ver: string = "", ""
- exc, ver = identifyexecutor()
- error(`your {exc} {ver} executor does not support drawing api`)
+ error("this environment does not support drawing api")
 end
 
-const fpsHistory: {number} = {}
-for i = 1, sample do
- fpsHistory[i] = 0
+const fh: {number} = table.create(sample, 0)
+local head: number = 1
+
+const getfh = function(i: number): number
+ return fh[((head + i - 2) % sample) + 1]
 end
 
-local last_time: number = tick()
-local framecount: number = 0
-local currentfps: number = 0
+const setfh_newest = function(val: number): ()
+ fh[head] = val
+ head = (head % sample) + 1
+end
 
 const bg: any = Draw "Square"
 bg.Size = Vector2.new(SETTINGS.GRAPH.WIDTH, SETTINGS.GRAPH.HEIGHT)
@@ -62,25 +66,23 @@ fpstext.Position = Vector2.new(SETTINGS.GRAPH.X, SETTINGS.GRAPH.Y - 20)
 fpstext.Text = "FPS: 0"
 fpstext.Visible = true
 
-const lines: {any} = {}
-for i = 1, sample - 1 do
+const lines: {any} = table.create(sample - 1)
+for i: number = 1, sample - 1 do
  const line: any = Draw "Line"
  line.Thickness = 1
  line.Color = Color3.fromRGB(0, 255, 0)
  line.Visible = true
  lines[i] = line
 end
---[[
- convert an fps value into a Y pixel position inside the graph
- higher fps > lower on screen (near bottom)
- lower fps > higher on screen (near top)
-]]
+
+const k = function(b: boolean): ()
+ bg.Visible = b
+ border.Visible = b
+end
+
 const fps_to_y = function(fps: number): number
- const clamped: any = clamp(fps, 0, SETTINGS.MAX_FPS_SCALE)
- const ratio: any = clamped / SETTINGS.MAX_FPS_SCALE -- 0..1
- -- invert so low fps = high line (small Y), high fps = low line (big Y)
- const y: number = SETTINGS.GRAPH.Y + SETTINGS.GRAPH.HEIGHT - (ratio * SETTINGS.GRAPH.HEIGHT)
- return y
+ const ratio: number = clamp(fps, 0, SETTINGS.MAX_FPS_SCALE) / SETTINGS.MAX_FPS_SCALE
+ return SETTINGS.GRAPH.Y + SETTINGS.GRAPH.HEIGHT - (ratio * SETTINGS.GRAPH.HEIGHT)
 end
 
 const fps_to_color = function(fps: number): Color3
@@ -93,40 +95,54 @@ const fps_to_color = function(fps: number): Color3
  end
 end
 
-const updategraph = function(): ()
+local progress: number = 0
+local smoothed: number = 0
+const ALPHA: number = 0.1
+const SAMPLES_PER_SEC: number = 25
+
+const lerp = function(a: number, b: number, t: number): number
+ return a + (b - a) * t
+end
+
+const getfh_smooth = function(i: number, t: number): number
+ const v1: number = getfh(i)
+ const v2: number = getfh(if i < sample then i + 1 else i)
+ return lerp(v1, v2, t)
+end
+
+local con: RBXScriptConnection; con = RunService.RenderStepped:Connect(function(dt: number): ()
+ k(true)
+ const raw: number = if dt > 0 then 1 / dt else SETTINGS.MAX_FPS_SCALE
+ smoothed = smoothed + ALPHA * (raw - smoothed)
+ const fps: number = floor(smoothed)
+
+ progress = progress + (dt * SAMPLES_PER_SEC)
+ while progress >= 1 do
+  progress = progress - 1
+  setfh_newest(fps)
+ end
+ fh[head] = fps
+
+ const gx: number = SETTINGS.GRAPH.X
  for i = 1, sample - 1 do
-  const x1: number = SETTINGS.GRAPH.X + (i - 1)
-  const x2: number = SETTINGS.GRAPH.X + i
-  const y1: number = fps_to_y(fpsHistory[i])
-  const y2: number = fps_to_y(fpsHistory[i + 1])
+  const x1: number = gx + (i - 1)
+  const x2: number = gx + i
+  const val1: number = getfh_smooth(i, progress)
+  const val2: number = getfh_smooth(i + 1, progress)
+  const y1: number = fps_to_y(val1)
+  const y2: number = fps_to_y(val2)
 
   const line: any = lines[i]
   line.From = Vector2.new(x1, y1)
   line.To = Vector2.new(x2, y2)
-  line.Color = fps_to_color(fpsHistory[i + 1])
+  line.Color = fps_to_color(val2)
  end
-end
 
-local con; con = RunService.RenderStepped:Connect(function(dt)
- framecount = framecount + 1
- const now: number = tick()
-
- if now - last_time >= 0.1 then
-  currentfps = floor(framecount / (now - last_time))
-  framecount = 0
-  last_time = now
-  -- push new sample at the end
-  table.remove(fpsHistory, 1)
-  table.insert(fpsHistory, currentfps)
-
-  fpstext.Text = "FPS: " .. currentfps
-  fpstext.Color = fps_to_color(currentfps)
-
-  updategraph()
- end
+ fpstext.Text = "FPS: " .. fps
+ fpstext.Color = fps_to_color(fps)
 end)
 
-const destroy = function(): ()
+const destroy = function()
  con:Disconnect()
  bg:Remove()
  border:Remove()
@@ -135,4 +151,5 @@ const destroy = function(): ()
   line:Remove()
  end
 end
-env.DestroyFpsGraph = destroy
+
+return destroy
