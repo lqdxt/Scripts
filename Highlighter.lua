@@ -567,6 +567,4 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
  return t, ec, cml, es, sl
 end
 
-return {
- Highlighter
-}
+return Highlighter
