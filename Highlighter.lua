@@ -1,7 +1,4 @@
 const Highlighter: {
- Font: {
-  FiraCode: any
- },
  SyntaxColors: {
   keyword: string,
   string: string,
@@ -568,92 +565,6 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
  end
 
  return t, ec, cml, es, sl
-end
-
-const function HexToColor3(hex: string): Color3
- const clean: string = hex:gsub("#", "")
- const r: number = tonumber(clean:sub(1, 2), 16) or 255
- const g: number = tonumber(clean:sub(3, 4), 16) or 255
- const b: number = tonumber(clean:sub(5, 6), 16) or 255
- return Color3.fromRGB(r, g, b)
-end
-
-const TypeColors: {[string]: Color3} = {}
-for typ, hex in Highlighter.SyntaxColors do
- TypeColors[typ] = HexToColor3(hex)
-end
-
-do
- const SHEET_ID: string = "rbxassetid://103023743034114"
- const CELL_WIDTH: number = 57.6
- const CELL_HEIGHT: number = 96
-
- const CHAR_MAP: {[string]: {number}} = {
-  ["A"]={1,1}, ["B"]={1,2}, ["C"]={1,3}, ["D"]={1,4}, ["E"]={1,5},
-  ["F"]={1,6}, ["G"]={1,7}, ["H"]={1,8}, ["I"]={1,9}, ["J"]={1,10},
-  ["K"]={1,11}, ["L"]={1,12}, ["M"]={1,13}, ["N"]={1,14}, ["O"]={1,15},
-  ["P"]={2,1}, ["Q"]={2,2}, ["R"]={2,3}, ["S"]={2,4}, ["T"]={2,5},
-  ["U"]={2,6}, ["V"]={2,7}, ["W"]={2,8}, ["X"]={2,9}, ["Y"]={2,10},
-  ["Z"]={2,11}, ["À"]={2,12}, ["Å"]={2,13}, ["É"]={2,14}, ["Î"]={2,15},
-  ["a"]={3,1}, ["b"]={3,2}, ["c"]={3,3}, ["d"]={3,4}, ["e"]={3,5},
-  ["f"]={3,6}, ["g"]={3,7}, ["h"]={3,8}, ["i"]={3,9}, ["j"]={3,10},
-  ["k"]={3,11}, ["l"]={3,12}, ["m"]={3,13}, ["n"]={3,14}, ["o"]={3,15},
-  ["p"]={4,1}, ["q"]={4,2}, ["r"]={4,3}, ["s"]={4,4}, ["t"]={4,5},
-  ["u"]={4,6}, ["v"]={4,7}, ["w"]={4,8}, ["x"]={4,9}, ["y"]={4,10},
-  ["z"]={4,11}, ["à"]={4,12}, ["å"]={4,13}, ["é"]={4,14}, ["î"]={4,15},
-  ["&"]={5,1}, ["1"]={5,2}, ["2"]={5,3}, ["3"]={5,4}, ["4"]={5,5},
-  ["5"]={5,6}, ["6"]={5,7}, ["7"]={5,8}, ["8"]={5,9}, ["9"]={5,10},
-  ["0"]={5,11},
-  ["("]={6,7}, ["$"]={6,8}, ["£"]={6,9}, ["€"]={6,10}, ["."]={6,11},
-  [","]={6,12}, ["!"]={6,13}, ["?"]={6,14}, [")"]={6,15},
- }
-
- const function GetGlyphOffset(char: string): Vector2?
-  const pos: {number}? = CHAR_MAP[char]
-  if not pos then return nil end
-  return Vector2.new((pos[2] - 1) * CELL_WIDTH, (pos[1] - 1) * CELL_HEIGHT)
- end
-
- const function RenderLine(lf: Frame, pool: {ImageLabel}, tokens: {Token}, glyphw: number, glyphh: number): ()
-  local slot: number = 0
-  for _, tok in tokens do
-   const color: Color3 = TypeColors[tok.type] or TypeColors.plain
-   const val: string = tok.value
-   for ci = 1, #val do
-    slot = slot + 1
-    const char: string = val:sub(ci, ci)
-    local glyph: ImageLabel? = pool[slot]
-    if not glyph then
-     glyph = Instance.new("ImageLabel")
-     glyph.BackgroundTransparency = 1
-     glyph.Image = SHEET_ID
-     glyph.ImageRectSize = Vector2.new(CELL_WIDTH, CELL_HEIGHT)
-     glyph.Size = UDim2.fromOffset(glyphw, glyphh)
-     glyph.Parent = lf
-     pool[slot] = glyph
-    end
-    glyph.Position = UDim2.fromOffset((slot - 1) * glyphw, 0)
-    const offset: Vector2? = GetGlyphOffset(char)
-    if offset then
-     glyph.Visible = true
-     glyph.ImageRectOffset = offset
-     glyph.ImageColor3 = color
-    else
-     glyph.Visible = false
-    end
-   end
-  end
-  for i = slot + 1, #pool do
-   pool[i].Visible = false
-  end
- end
-
- Highlighter.Font.FiraCode = {
-  SheetId = SHEET_ID,
-  CellSize = Vector2.new(CELL_WIDTH, CELL_HEIGHT),
-  GetGlyphOffset = GetGlyphOffset,
-  RenderLine = RenderLine,
- }
 end
 
 return {
