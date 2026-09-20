@@ -567,4 +567,110 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
  return t, ec, cml, es, sl
 end
 
+const INDENT_OPEN: {[string]: boolean} = {
+ ["function"] = true,
+ ["then"] = true,
+ ["do"] = true,
+ ["repeat"] = true,
+}
+const INDENT_CLOSE: {[string]: boolean} = {
+ ["end"] = true,
+ ["until"] = true,
+}
+const DEDENT_FIRST: {[string]: boolean} = {
+ ["end"] = true,
+ ["until"] = true,
+ ["else"] = true,
+ ["elseif"] = true,
+}
+
+function Highlighter.Indent(txt: string?, indentSize: number?): string
+ const stxt: string = txt or ""
+ const size: number = indentSize or 4
+ const unit: string = string.rep(" ", size)
+
+ const lines: {string} = string.split(stxt, "\n")
+ const out: {string} = {}
+
+ local level: number = 0
+ local cc, cl, cs, csl = false, 0, false, 0
+
+ for idx, line in lines do
+  const enteringOpenBlock: boolean = cc or cs
+
+  const tokens, nec, ncl, nes, ncsl = Highlighter.Tokenize(line, cc, cl, cs, csl)
+  cc, cl, cs, csl = nec, ncl, nes, ncsl
+
+  if enteringOpenBlock then
+   out[idx] = line
+   continue
+  end
+
+  local firstWord: string? = nil
+  for _, tok in tokens do
+   if tok.type == "keyword" then
+    firstWord = tok.value
+    break
+   elseif tok.type == "comment" then
+    continue
+   elseif tok.type == "plain" and IsWhitespaceString(tok.value) then
+    continue
+   else
+    if tok.type == "plain" and tok.value == "}" then
+     firstWord = "}"
+    end
+    break
+   end
+  end
+
+  const isDedentFirst: boolean = DEDENT_FIRST[firstWord or ""] == true or firstWord == "}"
+  const printLevel: number = isDedentFirst and math.max(level - 1, 0) or level
+
+  local skipFirstThen: boolean = (firstWord == "else" or firstWord == "elseif")
+  local delta: number = 0
+  for _, tok in tokens do
+   if tok.type == "keyword" then
+    if tok.value == "then" and skipFirstThen then
+     skipFirstThen = false
+    elseif INDENT_OPEN[tok.value] then
+     delta = delta + 1
+    elseif INDENT_CLOSE[tok.value] then
+     delta = delta - 1
+    end
+   elseif tok.type == "plain" then
+    if tok.value == "{" then
+     delta = delta + 1
+    elseif tok.value == "}" then
+     delta = delta - 1
+    end
+   end
+  end
+  level = math.max(level + delta, 0)
+
+  const trimmed: string = line:match("^%s*(.-)%s*$") or ""
+  out[idx] = trimmed == "" and "" or (unit:rep(printLevel) .. trimmed)
+ end
+
+ return table.concat(out, "\n")
+end
+
+const function EscapeRichText(s: string): string
+ s = s:gsub("&", "&amp;")
+ s = s:gsub("<", "&lt;")
+ s = s:gsub(">", "&gt;")
+ s = s:gsub("\"", "&quot;")
+ s = s:gsub("'", "&apos;")
+ return s
+end
+
+function Highlighter.Render(txt: string?): string
+ const tokens: {Token} = Highlighter.Tokenize(txt)
+ const parts: {string} = {}
+ for i, tok in tokens do
+  const color: string = Highlighter.SyntaxColors[tok.type] or Highlighter.SyntaxColors.plain
+  parts[i] = `<font color="{color}">{EscapeRichText(tok.value)}</font>`
+ end
+ return table.concat(parts)
+end
+
 return Highlighter
