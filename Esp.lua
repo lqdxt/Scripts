@@ -23,6 +23,7 @@ export type ESPConfig = {
  Target: ((instance: Instance) -> Instance?)?,
  Labels: { [string]: (target: Instance, instance: Instance) -> string }?,
  Loops: { (tracked: TrackedObject, dt: number) -> () }?,
+ Connections: { (tracked: TrackedObject) -> RBXScriptConnection? }?,
 }
 
 export type TrackedObject = {
@@ -192,6 +193,11 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
   highlight.FillTransparency = 0.5
   highlight.OutlineTransparency = 0
   highlight.Parent = ResolveParent(config.Parent, target, instance, target)
+  
+  if config.Tag then
+   CollectionService:AddTag(highlight, config.Tag)
+  end
+
   tracked.Adornment = highlight
   table.insert(tracked.Cleanups, highlight)
 
@@ -207,6 +213,11 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
    box.AlwaysOnTop = true
    box.ZIndex = 5
    box.Parent = ResolveParent(config.Parent, target, instance, adorneePart)
+
+   if config.Tag then
+    CollectionService:AddTag(box, config.Tag)
+   end
+
    tracked.Adornment = box
    table.insert(tracked.Cleanups, box)
   end
@@ -255,8 +266,22 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
 
   local billboardParent = ResolveParent(bbConfig.Parent or config.Parent, target, instance, target)
   billboard.Parent = billboardParent
+
+  if config.Tag then
+   CollectionService:AddTag(billboard, config.Tag)
+  end
+
   tracked.Billboard = billboard
   table.insert(tracked.Cleanups, billboard)
+ end
+
+ if config.Connections then
+  for _, connFunc in ipairs(config.Connections) do
+   local ok, conn = pcall(connFunc, tracked)
+   if ok and typeof(conn) == "RBXScriptConnection" then
+    table.insert(tracked.Cleanups, conn)
+   end
+  end
  end
 
  local isCleaned = false
@@ -361,24 +386,6 @@ function Esp.MakeEsp(espName: string)
    if tracked then
     tracked.Destroy()
     self.Tracked[inst] = nil
-   end
-  end
-
-  if config.Tag then
-   local added_con = CollectionService:GetInstanceAddedSignal(config.Tag):Connect(function(inst)
-    self:AddInstance(inst)
-   end)
-   local removed_con = CollectionService:GetInstanceRemovedSignal(config.Tag):Connect(function(inst)
-    self:RemoveInstance(inst)
-   end)
-
-   table.insert(self.Connections, added_con)
-   table.insert(self.Connections, removed_con)
-
-   for _, inst in ipairs(CollectionService:GetTagged(config.Tag)) do
-    task.spawn(function()
-     self:AddInstance(inst)
-    end)
    end
   end
 
