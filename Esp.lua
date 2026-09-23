@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 export type PositionType = Vector3 | "Top" | "Bottom" | "Left" | "Right"
 export type ParentType = Instance | ((target: Instance, instance: Instance) -> Instance?)
 export type TargetType = Instance | { Instance } | (() -> (Instance | { Instance })?)
+export type ConnectionResult = RBXScriptConnection | { RBXScriptConnection } | { any }
 
 export type BillboardConfig = {
  Size: (UDim2 | (target: Instance, instance: Instance) -> UDim2)?,
@@ -24,7 +25,7 @@ export type ESPConfig = {
  Match: ((instance: Instance) -> boolean)?,
  Labels: { [string]: (target: Instance, instance: Instance) -> string }?,
  Loops: { (tracked: TrackedObject, dt: number) -> () }?,
- Connections: { (tracked: TrackedObject) -> RBXScriptConnection? }?,
+ Connections: { (tracked: TrackedObject) -> ConnectionResult? }?,
 }
 
 export type TrackedObject = {
@@ -266,11 +267,25 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
   table.insert(tracked.Cleanups, billboard)
  end
 
+ local function RegisterCleanup(item: any)
+  if typeof(item) == "RBXScriptConnection" or typeof(item) == "Instance" then
+   table.insert(tracked.Cleanups, item)
+  elseif type(item) == "table" then
+   for _, subItem in ipairs(item) do
+    RegisterCleanup(subItem)
+   end
+  end
+ end
+
  if config.Connections then
-  for _, connFunc in ipairs(config.Connections) do
-   local ok, conn = pcall(connFunc, tracked)
-   if ok and typeof(conn) == "RBXScriptConnection" then
-    table.insert(tracked.Cleanups, conn)
+  for _, connEntry in ipairs(config.Connections) do
+   if type(connEntry) == "function" then
+    local ok, res = pcall(connEntry, tracked)
+    if ok and res then
+     RegisterCleanup(res)
+    end
+   else
+    RegisterCleanup(connEntry)
    end
   end
  end
@@ -284,6 +299,8 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
    if typeof(item) == "Instance" then
     item:Destroy()
    elseif typeof(item) == "RBXScriptConnection" then
+    item:Disconnect()
+   elseif type(item) == "table" and type(item.Disconnect) == "function" then
     item:Disconnect()
    end
   end
