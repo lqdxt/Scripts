@@ -1,13 +1,14 @@
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 
 export type PositionType = Vector3 | "Top" | "Bottom" | "Left" | "Right"
+export type ParentType = Instance | ((target: Instance, instance: Instance) -> Instance?)
 
 export type BillboardConfig = {
  Size: (UDim2 | (target: Instance, instance: Instance) -> UDim2)?,
  Position: (PositionType | (target: Instance, instance: Instance) -> PositionType)?,
  AlwaysOnTop: (boolean | (target: Instance, instance: Instance) -> boolean)?,
+ Parent: ParentType?,
 }
 
 export type ESPConfig = {
@@ -17,6 +18,7 @@ export type ESPConfig = {
  AdornColor: (Color3 | (target: Instance, instance: Instance) -> Color3)?,
  LabelColor: (Color3 | (target: Instance, instance: Instance) -> Color3)?,
  Billboard: BillboardConfig?,
+ Parent: ParentType?,
  Match: ((instance: Instance) -> boolean)?,
  Target: ((instance: Instance) -> Instance?)?,
  Labels: { [string]: (target: Instance, instance: Instance) -> string }?,
@@ -50,6 +52,7 @@ export type EspObject = {
 
 local Esp = {}
 Esp.Registered = {} :: { [string]: EspObject }
+Esp.DefaultParent = nil :: ParentType?
 
 local function GetTargetSize(target: Instance): Vector3
  if target:IsA("BasePart") then
@@ -59,6 +62,28 @@ local function GetTargetSize(target: Instance): Vector3
   return size
  end
  return Vector3.new(2, 5, 2)
+end
+
+local function ResolveParent(val: any, target: Instance, instance: Instance, defaultParent: Instance): Instance
+ if type(val) == "function" then
+  local ok, res = pcall(val, target, instance)
+  if ok and typeof(res) == "Instance" then
+   return res
+  end
+ elseif typeof(val) == "Instance" then
+  return val
+ end
+
+ if type(Esp.DefaultParent) == "function" then
+  local ok, res = pcall(Esp.DefaultParent, target, instance)
+  if ok and typeof(res) == "Instance" then
+   return res
+  end
+ elseif typeof(Esp.DefaultParent) == "Instance" then
+  return Esp.DefaultParent
+ end
+
+ return defaultParent
 end
 
 local function ResolveColor(val: any, target: Instance, instance: Instance, defaultColor: Color3): Color3
@@ -166,7 +191,7 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
   highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
   highlight.FillTransparency = 0.5
   highlight.OutlineTransparency = 0
-  highlight.Parent = target
+  highlight.Parent = ResolveParent(config.Parent, target, instance, target)
   tracked.Adornment = highlight
   table.insert(tracked.Cleanups, highlight)
 
@@ -181,7 +206,7 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
    box.Transparency = 0.4
    box.AlwaysOnTop = true
    box.ZIndex = 5
-   box.Parent = adorneePart
+   box.Parent = ResolveParent(config.Parent, target, instance, adorneePart)
    tracked.Adornment = box
    table.insert(tracked.Cleanups, box)
   end
@@ -228,7 +253,8 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
    }
   end
 
-  billboard.Parent = target
+  local billboardParent = ResolveParent(bbConfig.Parent or config.Parent, target, instance, target)
+  billboard.Parent = billboardParent
   tracked.Billboard = billboard
   table.insert(tracked.Cleanups, billboard)
  end
