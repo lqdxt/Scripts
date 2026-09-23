@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 
 export type PositionType = Vector3 | "Top" | "Bottom" | "Left" | "Right"
 export type ParentType = Instance | ((target: Instance, instance: Instance) -> Instance?)
+export type TargetType = Instance | { Instance } | (() -> (Instance | { Instance })?)
 
 export type BillboardConfig = {
  Size: (UDim2 | (target: Instance, instance: Instance) -> UDim2)?,
@@ -12,6 +13,7 @@ export type BillboardConfig = {
 }
 
 export type ESPConfig = {
+ Target: TargetType?,
  Toggle: (boolean | () -> boolean)?,
  Adorn: ("Highlight" | "BoxHandleAdornment" | "Box")?,
  Tag: string?,
@@ -20,7 +22,6 @@ export type ESPConfig = {
  Billboard: BillboardConfig?,
  Parent: ParentType?,
  Match: ((instance: Instance) -> boolean)?,
- Target: ((instance: Instance) -> Instance?)?,
  Labels: { [string]: (target: Instance, instance: Instance) -> string }?,
  Loops: { (tracked: TrackedObject, dt: number) -> () }?,
  Connections: { (tracked: TrackedObject) -> RBXScriptConnection? }?,
@@ -151,16 +152,6 @@ local function ResolveAlwaysOnTop(val: any, target: Instance, instance: Instance
  return defaultVal
 end
 
-local function ResolveTarget(config: ESPConfig, instance: Instance): Instance?
- if config.Target then
-  local ok, res = pcall(config.Target, instance)
-  if ok and res then
-   return res
-  end
- end
- return instance
-end
-
 local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedObject?
  if config.Match then
   local ok, matched = pcall(config.Match, instance)
@@ -169,7 +160,7 @@ local function CreateTrackedEsp(config: ESPConfig, instance: Instance): TrackedO
   end
  end
 
- local target = ResolveTarget(config, instance)
+ local target = instance
  if not target or not (target:IsA("PVInstance") or target:IsA("BasePart")) then
   return nil
  end
@@ -386,6 +377,41 @@ function Esp.MakeEsp(espName: string)
    if tracked then
     tracked.Destroy()
     self.Tracked[inst] = nil
+   end
+  end
+
+  if config.Target then
+   local resolvedTarget = if type(config.Target) == "function" then config.Target() else config.Target
+
+   if typeof(resolvedTarget) == "Instance" then
+    local targetFolder = resolvedTarget
+    local function tryAdd(desc: Instance)
+     if desc:IsA("Model") or desc:IsA("BasePart") then
+      task.delay(0.1, function()
+       if desc.Parent then
+        self:AddInstance(desc)
+       end
+      end)
+     end
+    end
+
+    for _, child in ipairs(targetFolder:GetChildren()) do
+     tryAdd(child)
+    end
+
+    local added_con = targetFolder.DescendantAdded:Connect(tryAdd)
+    local removed_con = targetFolder.DescendantRemoving:Connect(function(desc)
+     self:RemoveInstance(desc)
+    end)
+
+    table.insert(self.Connections, added_con)
+    table.insert(self.Connections, removed_con)
+   elseif type(resolvedTarget) == "table" then
+    for _, inst in ipairs(resolvedTarget) do
+     if typeof(inst) == "Instance" then
+      self:AddInstance(inst)
+     end
+    end
    end
   end
 
