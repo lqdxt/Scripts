@@ -20,35 +20,6 @@ if not hookmetamethod then
 end
 
 local anticheatbypass = function(target)
- task.spawn(function() -- adonis first
-  local x, y
-  for _, v in getgc(true) do
-   if type(v) == "table" then
-    local a = rawget(v, "Detected")
-    local b = rawget(v, "Kill") or rawget(v, "Kick")
-    if typeof(a) == "function" and not x then
-     x = a
-     hookfunction(x, function() return true end)
-    end
-    if rawget(v, "Variables") and rawget(v, "Process")
-     and typeof(b) == "function" and not y then
-     y = b
-     hookfunction(y, function() return end)
-    end
-   end
-  end
-  local rd = getrenv().debug
-  if rd and rd.info then
-   local o; o = hookfunction(rd.info, cclosure(function(...)
-    local a = ...
-    if x and a == x then
-     return coroutine.yield(coroutine.running())
-    end
-    return o(...)
-   end))
-  end
- end)
-
  task.spawn(function()
   repeat task.wait() until game:IsLoaded()
   local floor, cos, sin, acos, pi = math.floor, math.cos, math.sin, math.acos, math.pi
@@ -198,6 +169,8 @@ local anticheatbypass = function(target)
  end
 end
 
-if protect then protect(anticheatbypass, true) end
+if protect then
+ protect(anticheatbypass, true)
+end
 
 return anticheatbypass
