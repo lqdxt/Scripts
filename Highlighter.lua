@@ -86,6 +86,55 @@ const Highlighter: {
   ["wait"] = "global", ["warn"] = "global", ["workspace"] = "global",
   ["EnumItem"] = "global", ["Enums"] = "global",
   ["xpcall"] = "global", ["ypcall"] = "global",
+
+  ["appendfile"] = "global", ["base64"] = "global", ["base64_decode"] = "global", ["base64_encode"] = "global", ["base64decode"] = "global", ["base64encode"] = "global",
+  ["bit"] = "global", ["cache"] = "global", ["cacheinvalidate"] = "global", ["cachereplace"] = "global", ["checkcaller"] = "global", ["checkcclosure"] = "global",
+  ["checkclosure"] = "global", ["checklclosure"] = "global", ["cleardrawings"] = "global", ["cleardrawcache"] = "global", ["clonefunction"] = "global",
+  ["cloneinstance"] = "global", ["clonemanager"] = "global", ["cloneref"] = "global", ["compareinstances"] = "global", ["createsecurefunction"] = "global",
+  ["crypt"] = "global", ["encrypt"] = "global", ["decrypt"] = "global", ["hash"] = "global", ["generatebytes"] = "global", ["generatekey"] = "global", ["decompile"] = "global",
+  ["delfile"] = "global", ["delfolder"] = "global", ["disassemble"] = "global", ["Drawing"] = "global", ["filtergc"] = "global", ["fireclickdetector"] = "global",
+  ["fireproximityprompt"] = "global", ["fireproximityhandler"] = "global", ["firesignal"] = "global", ["firetouchinterest"] = "global",
+  ["firetouchhandler"] = "global", ["getactor"] = "global", ["getactors"] = "global", ["getluastate"] = "global", ["getgamestate"] = "global",
+  ["getallactors"] = "global", ["getscriptthread"] = "global", ["getcallbackvalue"] = "global", ["getcallbackmember"] = "global",
+  ["getcallingclosure"] = "global", ["getcallingscript"] = "global", ["getclipboard"] = "global", ["getconnections"] = "global",
+  ["getconstant"] = "global", ["getconstants"] = "global", ["getcustomasset"] = "global", ["getcustomassets"] = "global", ["getfpscap"] = "global",
+  ["getgc"] = "global", ["getgenv"] = "global", ["gethiddenproperties"] = "global", ["gethiddenproperty"] = "global", ["gethui"] = "global", ["gethiddenui"] = "global",
+  ["gethwid"] = "global", ["getidentity"] = "global", ["getinstances"] = "global", ["getloadedmodules"] = "global", ["getmenv"] = "global", ["getnamecallmethod"] = "global",
+  ["getnilinstances"] = "global", ["getproto"] = "global", ["getprotos"] = "global", ["getrawmetatable"] = "global", ["getreg"] = "global", ["getregistry"] = "global",
+  ["getrenderproperty"] = "global", ["getrenv"] = "global", ["getrenvglobal"] = "global", ["getrenvshared"] = "global", ["getrunningscripts"] = "global",
+  ["getscriptbytecode"] = "global", ["getscriptclosure"] = "global", ["getscripthash"] = "global", ["getscripts"] = "global", ["getsenv"] = "global",
+  ["getsimulationradius"] = "global", ["getspecialinfo"] = "global", ["getstack"] = "global", ["getsynasset"] = "global", ["gettenv"] = "global",
+  ["getthreadcontext"] = "global", ["getthreadidentity"] = "global", ["get_thread_identity"] = "global", ["get_thread_context"] = "global",
+  ["getupvalue"] = "global", ["getupvalues"] = "global", ["hookfunction"] = "global", ["hookmetamethod"] = "global", ["hooksignal"] = "global", ["hookconnection"] = "global",
+  ["http"] = "global", ["http_request"] = "global", ["identifyexecutor"] = "global", ["iscclosure"] = "global", ["isexecutorclosure"] = "global",
+  ["is_executor_closure"] = "global", ["is_synapse_function"] = "global", ["isfile"] = "global", ["isfolder"] = "global", ["isgameactive"] = "global",
+  ["islclosure"] = "global", ["isourclosure"] = "global", ["isrbxactive"] = "global", ["isreadonly"] = "global", ["isrenderobj"] = "global", ["isscriptable"] = "global",
+  ["iswindowactive"] = "global", ["isclosure"] = "global", ["isnetworkowner"] = "global", ["keyclick"] = "global", ["keypress"] = "global", ["keyrelease"] = "global",
+  ["listfiles"] = "global", ["loadfile"] = "global", ["lz4"] = "global", ["lz4compress"] = "global",  ["lz4decompress"] = "global",
+  ["makefolder"] = "global", ["make_readonly"] = "global", ["make_writeable"] = "global", ["messagebox"] = "global",
+  ["mouse1click"] = "global", ["mouse1press"] = "global", ["mouse1release"] = "global", ["mouse1down"] = "global", ["mouse1up"] = "global", ["mouse2click"] = "global",
+  ["mouse2press"] = "global", ["mouse2release"] = "global", ["mouse2down"] = "global", ["mouse2up"] = "global", ["mousemoveabs"] = "global", ["mousemoverel"] = "global",
+  ["mousescroll"] = "global", ["newcclosure"] = "global", ["newlclosure"] = "global", ["protectgui"] = "global", ["protect_gui"] = "global", ["unprotectgui"] = "global",
+  ["unprotect_gui"] = "global", ["queueonteleport"] = "global", ["queue_on_teleport"] = "global", ["rconsoleclear"] = "global", ["rconsoleclose"] = "global",
+  ["rconsoleerr"] = "global", ["rconsolehide"] = "global", ["rconsoleinfo"] = "global", ["rconsoleinput"] = "global", ["rconsolename"] = "global",
+  ["rconsoleprint"] = "global", ["rconsolesettitle"] = "global", ["rconsoleshow"] = "global", ["rconsolewarn"] = "global", ["readfile"] = "global",
+  ["replicatesignal"] = "global", ["request"] = "global", ["restorefunction"] = "global", ["runonactor"] = "global", ["runsecurefunction"] = "global",
+  ["secure_call"] = "global", ["securecall"] = "global", ["saveinstance"] = "global", ["saveplace"] = "global", ["setclipboard"] = "global", ["setconstant"] = "global",
+  ["setfpscap"] = "global", ["setgenv"] = "global", ["sethiddenproperties"] = "global", ["sethiddenproperty"] = "global", ["setidentity"] = "global",
+  ["set_thread_identity"] = "global", ["set_thread_context"] = "global", ["setnamecallmethod"] = "global", ["setproto"] = "global",
+  ["setrawmetatable"] = "global", ["setreadonly"] = "global", ["setrenderproperty"] = "global", ["setscriptable"] = "global",
+  ["setsimulationradius"] = "global", ["setstack"] = "global", ["setthreadcontext"] = "global", ["setthreadidentity"] = "global",
+  ["setupvalue"] = "global", ["toclipboard"] = "global", ["WebSocket"] = "global", ["websocket"] = "global", ["writeclipboard"] = "global", ["writefile"] = "global",
+  ["getexecutorversion"] = "global", ["get_executor_version"] = "global", ["getinfo"] = "global", ["dumpstring"] = "global", ["getexecutorname"] = "global",
+  ["setrbxclipboard"] = "global", ["iskeydown"] = "global", ["iskeypressed"] = "global", ["isleftmousedown"] = "global", ["isrightmousedown"] = "global",
+  ["getfflag"] = "global", ["setfflag"] = "global", ["getthread"] = "global", ["getthreadid"] = "global", ["setthread"] = "global", ["setthreadid"] = "global",
+  ["getpointerfrominstance"] = "global", ["getscriptfromthread"] = "global", ["VirtualUser"] = "global", ["VirtualInputManager"] = "global",
+  ["consoleprint"] = "global", ["consoleclear"] = "global", ["consolesettitle"] = "global", ["consolecreate"] = "global", ["consoledestroy"] = "global",
+  ["printconsole"] = "global", ["HttpGet"] = "global", ["HttpPost"] = "global", ["httpget"] = "global", ["httppost"] = "global", ["DeltaConnection"] = "global",
+  ["ActorProxy"] = "global", ["ProtoProxy"] = "global", ["StopWatch"] = "global", ["Duration"] = "global", ["Regex"] = "global", ["LuaStateProxy"] = "global",
+  ["getfunctionhash"] = "global", ["getfunctionbytecode"] = "global", ["dumpbytecode"] = "global", ["zstdcompress"] = "global", ["zstddecompress"] = "global",
+  ["setupvalues"] = "global", ["detour_function"] = "global", ["hookmeta"] = "global", ["dofile"] = "global", ["isfunctionhooked"] = "global", ["getgamedata"] = "global",
+  ["create_secure_function"] = "global", ["clear_drawings"] = "global"
  }
 }
 
@@ -101,6 +150,8 @@ const B = {
  NEWLINE = 10,
  CR = 13,
  LPAREN = 40,
+ RPAREN = 41,
+ SEMICOLON = 59,
  LBRACE = 123,
  ZERO = 48,
  ONE = 49,
@@ -224,6 +275,9 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
  local sl: number = csl or 0
  local ad: boolean = false
  local adg: boolean = false
+ local fnPending: boolean = false
+ local pDepth: number = 0
+ local retType: boolean = false
 
  if cc then
   const trt: string = BracketCloseTarget(cml)
@@ -261,6 +315,7 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
   if b == B.MINUS and s_byte(stxt, i + 1) == B.MINUS then
    const st: number = i
    i = i + 2
+   retType = false
    const nb: number? = s_byte(stxt, i)
    if nb == B.LBRACKET then
     const lvl: number?, np: number = ParseBracket(stxt, i, len)
@@ -281,6 +336,7 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
      continue
     end
    end
+   retType = false
    local le: number = i
    while le <= len and s_byte(stxt, le) ~= B.NEWLINE do
     le = le + 1
@@ -294,6 +350,7 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
   if b == B.LBRACKET then
    const lvl: number?, np: number = ParseBracket(stxt, i, len)
    if lvl then
+    retType = false
     const ep: number? = FindBracket(stxt, np, len, lvl)
     if ep then
      n = n + 1
@@ -315,6 +372,7 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
   if b == B.Dqt or b == B.Sqt or b == B.BACKTICK then
    const qt: number = b
    const st: number = i
+   retType = false
    i = i + 1
    while i <= len do
     const cb: number? = s_byte(stxt, i)
@@ -344,7 +402,17 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
     i = i + 1
    end
    const wrd: string = s_sub(stxt, st, i - 1)
-   if adg then
+   const wtyp: string? = Highlighter.TokenTypes[wrd]
+   if wtyp == "keyword" then
+    retType = false
+    if wrd == "function" and pDepth == 0 then
+     fnPending = true
+    end
+   end
+   if retType and (wtyp ~= "value" or wrd == "nil") then
+    n = n + 1
+    t[n] = {type = "property", value = wrd}
+   elseif adg then
     n = n + 1
     t[n] = {type = "builtin", value = wrd}
    elseif ad then
@@ -394,6 +462,7 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
   const nb: number? = s_byte(stxt, i + 1)
   if TypeDigit(b) or (b == B.DOT and TypeDigit(nb) and s_byte(stxt, i + 2) ~= B.DOT) then
    const st: number = i
+   retType = false
    if b == B.ZERO and (nb == B.LETTER_X_LOWER or nb == B.LETTER_X_UPPER) then
     i = i + 2
     local hdt: boolean = false
@@ -505,6 +574,25 @@ function Highlighter.Tokenize(txt: string?, cc: boolean?, cl: number?, cs: boole
   const val: string = s_sub(stxt, st, i - 1)
   n = n + 1
   t[n] = {type = "plain", value = val}
+  for k = 1, #val do
+   const c: number = s_byte(val, k)
+   if retType and (c == B.NEWLINE or c == B.EQUALS or c == B.SEMICOLON) then
+    retType = false
+   end
+   if pDepth > 0 then
+    if c == B.LPAREN then
+     pDepth = pDepth + 1
+    elseif c == B.RPAREN then
+     pDepth = pDepth - 1
+     if pDepth == 0 and s_find(val, "^[ \t]*:", k + 1) then
+      retType = true
+     end
+    end
+   elseif fnPending and c == B.LPAREN then
+    fnPending = false
+    pDepth = 1
+   end
+  end
   if not IsWhitespaceString(val) then
    ad = false
    adg = false
