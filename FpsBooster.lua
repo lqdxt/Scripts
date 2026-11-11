@@ -519,6 +519,19 @@ local uiScale = Instance.new("UIScale")
 uiScale.Scale = 1
 uiScale.Parent = main
 
+-- Soft blurred shadow around the window (native UIShadow)
+local shadowOk, shadow = pcall(function()
+ local sh = Instance.new("UIShadow")
+ sh.Color = Color3.new(0, 0, 0)
+ sh.Transparency = 0.45
+ sh.BlurRadius = UDim.new(0, 30)
+ sh.Spread = UDim2.fromOffset(6, 6)
+ sh.Offset = UDim2.fromOffset(0, 4)
+ sh.ZIndex = -1
+ sh.Parent = main
+ return sh
+end)
+
 local bar = Instance.new("Frame")
 bar.Size = UDim2.new(1, 0, 0, 40)
 bar.BackgroundColor3 = BAR
