@@ -898,7 +898,7 @@ end
 
 local ASSET_DIR = "FpsBooster"
 local CARET_PATH = ASSET_DIR .. "/Caret.png"
-local CARET_URL = "https://raw.githubusercontent.com/lqdxt/LqExplorer/main/images/Caret.png"
+local CARET_URL = "https://raw.githubusercontent.com/lqdxt/LqExplorer/main/images/caret-small-right.png"
 
 local function LoadCaret()
  local canFs = typeof(isfolder) == "function" and typeof(makefolder) == "function"
