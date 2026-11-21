@@ -23,7 +23,7 @@ const Highlighter: {
   builtin = "#84D6F7",
   property = "#61A1F1",
   method = "#FDFBAC",
-  identifier = "#F8F8F2",
+  identifier = "#FFFFFF",
   plain = "#FFFFFF",
  },
  TokenTypes = {
