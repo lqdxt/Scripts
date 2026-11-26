@@ -2594,6 +2594,7 @@ type Link = {text: string, url: string}
 type Tab = {
  title: string,
  history: {string},
+ pendingPost: string?,
  index: number,
  loadId: number,
  hover: boolean,
@@ -2613,7 +2614,7 @@ type Tab = {
 local tabs: {Tab} = {}
 local active: Tab? = nil
 local nextOrder = 1
-local Navigate: (Tab, string) -> ()
+local Navigate: (Tab, string, string?) -> ()
 
 local function CurrentUrl(tab: Tab): string
  return tab.history[tab.index] or ""
@@ -3474,7 +3475,8 @@ local function RenderPage(tab: Tab, blocks: {Block}, links: {Link}, note: string
 
  local function SubmitForm(form: any, submitter: any?, flash: (() -> ())?)
   if form.loose then return end
-  if form.method ~= "get" then
+  local isPost = form.method == "post"
+  if form.method ~= "get" and not isPost then
    if flash then flash() end
    return
   end
@@ -3494,6 +3496,10 @@ local function RenderPage(tab: Tab, blocks: {Block}, links: {Link}, note: string
      add(nm, f.value or "")
     end
    end
+  end
+  if isPost then
+   Navigate(tab, (form.action:gsub("#.*$", "")), table.concat(out, "&"))
+   return
   end
   local base = form.action:gsub("#.*$", "")
   base = base:gsub("%?.*$", "")
@@ -4062,6 +4068,8 @@ local function LoadPage(tab: Tab)
  local url = CurrentUrl(tab)
  tab.loadId += 1
  local id = tab.loadId
+ local postBody = tab.pendingPost
+ tab.pendingPost = nil
 
  if url == "" then
   tab.title = "New Tab"
@@ -4083,6 +4091,14 @@ local function LoadPage(tab: Tab)
   end
 
   local ok, res = pcall(function()
+   if postBody then
+    return reqFunc({
+     Url = url,
+     Method = "POST",
+     Headers = {["Content-Type"] = "application/x-www-form-urlencoded"},
+     Body = postBody,
+    })
+   end
    return reqFunc({
     Url = url,
     Method = "GET"
@@ -4180,7 +4196,7 @@ local function LoadPage(tab: Tab)
  end)
 end
 
-Navigate = function(tab: Tab, raw: string)
+Navigate = function(tab: Tab, raw: string, postBody: string?)
  raw = raw:match("^%s*(.-)%s*$") or ""
  if raw == "" then return end
  CloseSettings()
@@ -4199,6 +4215,7 @@ Navigate = function(tab: Tab, raw: string)
  end
  table.insert(tab.history, url)
  tab.index = #tab.history
+ tab.pendingPost = postBody
  LoadPage(tab)
  if tab == active then RefreshToolbar() end
 end
