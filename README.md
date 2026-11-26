@@ -1,6 +1,6 @@
 # Scripts
 
-**a dedicated repo where i post my scripts**, random ones but cool
+**a dedicated repo where i post my scripts** for fun, kinda good quality atleast
 
 i publish some helpful modules also, not only plain scripts
 
